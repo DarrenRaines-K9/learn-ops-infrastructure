@@ -25,3 +25,10 @@ Step 4 — Constraints:
 - Output valid Mermaid syntax only, in a single code block.
 
 ## 2. Convert to a Mermaid Diagram
+
+Rules:
+- Each service is a node with a short label
+- Each connection is a directed edge
+- Label every edge with the connection type (HTTP, DB, pub/sub, etc.) and port if known
+- Do not add anything beyond services and their connections
+Output only the Mermaid code block.
