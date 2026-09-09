@@ -4,37 +4,29 @@
 
 ```mermaid
 flowchart TD
-    Browser["Browser<br/>external client<br/>end user"]
-    Debugger["IDE Debugger<br/>debugpy client<br/>remote debugging tool"]
-    client["client<br/>React (react-scripts)<br/>SPA frontend"]
-    api["api<br/>Django + DRF<br/>REST API"]
-    database["database<br/>PostgreSQL 16<br/>relational database"]
-    valkey["valkey<br/>Valkey<br/>cache / pub-sub broker"]
-    valkeyMonitor["valkey-monitor<br/>valkey-cli<br/>debug monitor sidecar"]
-    monarch["monarch<br/>Python service<br/>async pub/sub worker (ticket migration)"]
-    prometheus["prometheus<br/>Prometheus<br/>metrics scraper"]
-    grafana["grafana<br/>Grafana<br/>metrics dashboard"]
-    postgresExporter["postgres_exporter<br/>postgres-exporter<br/>Postgres metrics exporter"]
-    github["GitHub API<br/>external service<br/>REST API (issues, OAuth)"]
-    slack["Slack API<br/>external service<br/>chat.postMessage webhook"]
+    Browser["Browser<br/>end user"]
+    DevTooling["Dev Tooling<br/>IDE Debugger + valkey-monitor<br/>debug/inspection only"]
+    client["client<br/>React SPA"]
+    api["api<br/>Django + DRF"]
+    database["database<br/>PostgreSQL 16"]
+    valkey["valkey<br/>cache / pub-sub broker"]
+    monarch["monarch<br/>async worker (ticket migration)"]
+    Observability["Observability Stack<br/>Prometheus + Grafana + postgres_exporter"]
+    ExternalAPIs["External APIs<br/>GitHub + Slack"]
 
-    Browser -->|"HTTP, port 3000, browser-initiated"| client
-    Browser -->|"HTTP, port 3001, browser-initiated"| grafana
-    Browser -->|"HTTP GET /health /logs, port 8081, browser-initiated"| monarch
-    Browser -->|"HTTP GET /metrics, port 8080, browser-initiated"| monarch
-    Debugger -->|"debugpy protocol, port 5678, debugger-initiated"| api
-    client -->|"HTTP REST (axios), port 8000, client-initiated"| api
-    api -->|"SQL query (psycopg2), port 5432, api-initiated"| database
-    postgresExporter -->|"SQL query (stats collection), port 5432, exporter-initiated"| database
-    api -->|"GET/SET cache commands, port 6379, api-initiated"| valkey
-    api -->|"PUBLISH channel_migrate_issue_tickets, port 6379, api-initiated"| valkey
-    valkey -->|"pub/sub message delivery (SUBSCRIBE), port 6379, pushed to subscriber"| monarch
-    valkeyMonitor -->|"MONITOR command (TCP), port 6379, monitor-initiated"| valkey
-    api -->|"HTTPS REST (OAuth token exchange, profile fetch), port 443, api-initiated"| github
-    monarch -->|"HTTPS REST (GET/POST issues), port 443, monarch-initiated"| github
-    api -->|"HTTPS POST chat.postMessage, port 443, api-initiated"| slack
-    monarch -->|"HTTPS POST (migration status), port 443, monarch-initiated"| slack
-    prometheus -->|"HTTP GET /metrics/metrics (scrape), port 8000, prometheus-initiated"| api
-    prometheus -->|"HTTP GET /metrics (scrape), port 9187, prometheus-initiated"| postgresExporter
-    grafana -->|"HTTP query API (datasource), port 9090, grafana-initiated"| prometheus
+    Browser -->|"HTTP, port 3000"| client
+    Browser -->|"HTTP, port 3001 (Grafana UI)"| Observability
+    Browser -->|"HTTP GET /health, /metrics, ports 8080-8081"| monarch
+    client -->|"HTTP REST (axios), port 8000"| api
+    api -->|"SQL (psycopg2), port 5432"| database
+    api -->|"cache GET/SET + PUBLISH, port 6379"| valkey
+    valkey -->|"pub/sub delivery, port 6379"| monarch
+    api -->|"HTTPS REST (OAuth, chat.postMessage), port 443"| ExternalAPIs
+    monarch -->|"HTTPS REST (issues, status updates), port 443"| ExternalAPIs
+    Observability -->|"scrape /metrics, port 8000"| api
+    Observability -->|"SQL stats query, port 5432"| database
+    DevTooling -->|"debugpy protocol, port 5678"| api
+    DevTooling -->|"MONITOR command, port 6379"| valkey
 ```
+
+Grouped for readability: **Dev Tooling** = IDE Debugger + valkey-monitor sidecar (debug-only, not core request flow). **Observability Stack** = Prometheus + Grafana + postgres_exporter (Grafana's Prometheus datasource query and Prometheus's scrape of postgres_exporter are now internal to this box). **External APIs** = GitHub + Slack.
