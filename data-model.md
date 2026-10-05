@@ -14,14 +14,14 @@ django
 
 | Model Name | Table Name |
 |------------|------------|
-| Model 1    |            |
-| Model 2    |            |
+| book   |  learningAPI_book          |
+| capstone    |    learningAPI_capstone        |
 
 | Property Name | Column Name | Data Type |
 |---------------|-------------|-----------|
-|               |             |           |
-|               |             |           |
-|               |             |           |
+|   book            |  name           |  varchar         |
+|   book            |  course_id           |  int         |
+|   book            |   description          |   varchar        |
 
 ## 4. Relationship Examples
 
